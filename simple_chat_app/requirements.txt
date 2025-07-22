@@ -1,0 +1,9 @@
+Một chat app đơn giản gồm có :
+- 1 server
+- 2 tới 3 client
+Các chức năng cần có:
+- Gửi và nhận tin nhắn giữa các client 
+- Hiển thị danh sách các client đang kết nối ( đang online )
+- Hiển thị tin nhắn đã gửi và nhận ( lịch sử chat )
+- Cho phép người dùng nhập tên hiển thị (nickname)
+- Cho phép người dùng gửi tin nhắn đến tất cả các client hoặc một client ( inbox hoặc group chat )
