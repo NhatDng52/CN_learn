@@ -3,8 +3,8 @@ import threading
 import json
 SEVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
-USER_NAME = 'client_1'
-NICKNAME = 'client_1'
+USER_NAME = 'client_2'
+NICKNAME = 'client_2'
 
 def listen_for_messages(client):
     """Function to listen for messages from the server"""
@@ -41,7 +41,7 @@ def main():
                 break
             elif msg.lower() == 'fetch onl users':    
                 msg_data = {
-                    "username": "client_1",
+                    "username": "client_2",
                     "command": "fetch onl users",
                     "to": "server",
                     "message": msg,
@@ -51,7 +51,7 @@ def main():
                 to_nickname = input("Enter the nickname of the user to send message: ")
                 message = input("Enter your message: ")
                 msg_data = {
-                    "username": "client_1",
+                    "username": "client_2",
                     "command": "send_message",
                     "other name": [to_nickname],
                     "message": message,

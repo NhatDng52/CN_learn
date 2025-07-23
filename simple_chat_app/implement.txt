@@ -1,0 +1,54 @@
+các file cần có :
+1 server.py 
+3 client_x.py (x =1,2,3)
+
+server :
+nhận các command từ client, như :
+- fetch onl user    
+- chat ( gr, user)
+- get chat history 
+- conversation rename  
+- create groupchat 
+client :
+nhận các input từ user và chuyển tới client như :
+- enterchat xxx ( xxx là tên user hoặc group)
+- Các tin nhắn từ client sau khi đã enter chat
+- out chat xxx ( xxx là tên user hoặc group )
+- create group xxx contain yyy,zzz
+- rename ( inconversation ) from xxx to yyy ( với xxx là tên cũ , yyy là tên mới)
+
+client - server protocol :
+- type : json 
+- format {
+    "username": ____,
+    "command": ____,
+    "other name ": ____ or [],
+    "message": ____,
+    "timestamp": ____, 
+                }
+- Trong đó :
+    + username, timestamp là để lưu lịch sử chat 
+    + command là để biết client muốn dùng gì 
+    + other name, message là thông tin thêm nếu người dùng dùng : trong đó other name có thể là tên gr chat hoặc người dùng, trong trường hợp tạo gr nó là list người muốn tạo 
+- data: 
+    + chat_history: dict 
+        lưu các key :
+            * userx_usery : dành cho cuộc trò chuyện 2 người 
+            * group_x : dành cho group chat 
+        lưu các value :
+            * list các dict gồm: 
+            {
+                user_x: message 
+                time: timestamp
+            }
+    + nickname: dict 
+        lưu các key :
+            * userx_usery : dành cho cuộc trò chuyện 2 người 
+            * group_x : dành cho group chat  
+        lưu các value :
+            * dict gồm: 
+            {
+                user_x: name1
+                user_y: name2
+            }
+    + online user : set()
