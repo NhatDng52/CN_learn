@@ -17,7 +17,9 @@ OnlineUsers = set()
 nicknames = {}
 chat_history = {}
 def register_nickname(client_socket, nickname):
+    old_nickname = nicknames.get(client_socket, None)
     nicknames[client_socket] = nickname
+    return f"Nickname changed from {old_nickname} to {nickname}" if old_nickname else f"Nickname set to {nickname}\n"
 
 def handle_client_commands(command):
     if command['command'] == 'fetch onl users':
@@ -38,9 +40,11 @@ def handle_client_commands(command):
             }
             client.send(json.dumps(send_data).encode('utf-8'))
             return "Message sent."
+    elif command['command'] == 'rename':
+        new_nickname = command['new_nickname']
+        return register_nickname(command['username'], new_nickname)
     else:
-        pass
-
+        return "Unknown command."
 
 def handle_client(client_socket, addr):
     try:

@@ -1,6 +1,8 @@
 import socket
 import threading
 import json
+import time
+from datetime import datetime
 SEVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
 USER_NAME = 'client_2'
@@ -45,7 +47,7 @@ def main():
                     "command": "fetch onl users",
                     "to": "server",
                     "message": msg,
-                    "timestamp": "123", 
+                    "timestamp": datetime.now().isoformat()
                 }
             elif msg.lower() == 'send_message':
                 to_nickname = input("Enter the nickname of the user to send message: ")
@@ -55,8 +57,20 @@ def main():
                     "command": "send_message",
                     "other name": [to_nickname],
                     "message": message,
-                    "timestamp": "123", 
+                    "timestamp": datetime.now().isoformat()
                 }
+            elif msg.lower() == 'rename':
+                new_nickname = input("Enter your new nickname: ")
+                msg_data = {
+                    "username": "client_2",
+                    "command": "rename",
+                    "new_nickname": new_nickname,
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                print("Unknown command. Please try again.")
+                continue
+            
             client.send(json.dumps(msg_data).encode('utf-8'))
         except KeyboardInterrupt:
             print("\n Đã thoát.")
