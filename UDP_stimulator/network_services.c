@@ -8,7 +8,6 @@
 #include <stdint.h>      
 
 void send_to_net(int sock, const char *packet, int udp_len, uint32_t src_addr, uint32_t dst_addr) {
-    printf("Sending packet to network...\n");
     struct sockaddr_in dest;
     memset(&dest, 0, sizeof(dest));
 
@@ -19,5 +18,4 @@ void send_to_net(int sock, const char *packet, int udp_len, uint32_t src_addr, u
         perror("sendto");
         exit(1);
     }
-    printf("Packet sent successfully.\n");
 }
