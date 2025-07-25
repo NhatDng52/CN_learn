@@ -1,14 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -pthread
 TARGET = udp_simulator
+SRCS = main.c sender.c receiver.c network_services.c
 
-SRC = main.c sender.c receiver.c network_services.c
+all: $(TARGET)
 
-all:
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
-
-run:
-	sudo ./$(TARGET)
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
 
 clean:
 	rm -f $(TARGET)

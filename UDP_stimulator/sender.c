@@ -94,7 +94,6 @@ int send_udp_packet(int src_port, int dst_port, const char *data,
     struct pseudo_header psh;
     psh.src_address = SRC_IP; // chuyển string thành hexa IP
     psh.dst_address = DST_IP;
-    printf("src address: %d, dst address: %d\n", psh.src_address, psh.dst_address);
     psh.placeholder = 0;
     psh.protocol = IPPROTO_UDP;
     psh.udp_len = htons(udp_len);
@@ -111,7 +110,6 @@ int send_udp_packet(int src_port, int dst_port, const char *data,
 
     // Gửi packet cho network ( vì chúng ta chỉ dừng ở transport )
     send_to_net(sock, packet, udp_len, psh.src_address, psh.dst_address); //Chỉ cần send k cần hand shake 
-    printf("UDP packet sent!\n");
     close(sock); // Đóng socket sau khi gửi xong
     return 0;
 }
