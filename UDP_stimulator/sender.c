@@ -110,7 +110,7 @@ int send_udp_packet(int src_port, int dst_port, const char *data,
     free(pseudogram);
 
     // Gửi packet cho network ( vì chúng ta chỉ dừng ở transport )
-    send_to_net(sock, packet, udp_len, psh.src_address, psh.dst_address, dst_port); //Chỉ cần send k cần hand shake 
+    send_to_net(sock, packet, udp_len, psh.src_address, psh.dst_address); //Chỉ cần send k cần hand shake 
     printf("UDP packet sent!\n");
     close(sock); // Đóng socket sau khi gửi xong
     return 0;
