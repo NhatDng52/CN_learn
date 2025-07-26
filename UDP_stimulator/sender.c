@@ -10,34 +10,7 @@
 #include "network_services.h"  // Add this include
 #include "sender.h"
 
-// định nghĩa struct, theo lý thuyết nó sẽ tạo ra một khối với các vùng nhớ có thể truy cập bằng tên, điều này giúp dễ truy cập hơn việc nhớ từng byte offset trong bộ nhớ.
-struct ip_header {
-    unsigned char ihl:4, version:4;
-    unsigned char tos;
-    unsigned short tot_len;
-    unsigned short id;
-    unsigned short frag_off;
-    unsigned char ttl;
-    unsigned char protocol;
-    unsigned short check;
-    unsigned int saddr;
-    unsigned int daddr;
-};
-struct udp_header {
-    unsigned short source;
-    unsigned short dest;
-    unsigned short len;
-    unsigned short check;
-};
 
-// Pseudo header cho checksum
-struct pseudo_header {
-    u_int32_t src_address;
-    u_int32_t dst_address;
-    u_int8_t placeholder;
-    u_int8_t protocol;
-    u_int16_t udp_len;
-};
 
 // Tính checksum (IP + UDP)
 unsigned short checksum(unsigned short *buf, int nwords) {
@@ -50,13 +23,20 @@ unsigned short checksum(unsigned short *buf, int nwords) {
 }
 
 
-int send_udp_packet(int src_port, int dst_port, const char *data,
-                    const char *src_ip, const char *dst_ip) {
-    // IP là 32-bit, kiểu phù hợp:
+int send_udp_packet(const char *data,
+                    const char *src_ip,
+                    const int src_port,
+                    const int dst_port,
+                    const char *dst_ip,
+                    void (*on_send)(const char *payload, int len)) {
+
+    // chuyển đổi địa chỉ IP từ string sang dạng hexa
     uint32_t SRC_IP = inet_addr(src_ip);
     uint32_t DST_IP = inet_addr(dst_ip);
 
-    // Port là 16-bit, nên dùng htons để đảm bảo đúng byte order:
+    // host to network short (htons) chuyển đổi từ định dạng máy chủ sang định dạng mạng
+    // host : một số máy lưu small/big-endian, to network : chuyển về big-endian
+    // short : 16 bit vì trường port chỉ có 16 bit nên cần ép kiểu về short
     uint16_t SRC_PORT = htons(src_port);
     uint16_t DST_PORT = htons(dst_port);
 
@@ -67,37 +47,38 @@ int send_udp_packet(int src_port, int dst_port, const char *data,
         exit(1);
     }
 
-    // Payload
+    // lấy độ dài lấy tỏng dộ dài packet để tinh checksum
     int data_len = strlen(data);
+    // datalen chỉ đến ký tự '\0' nên cần +1 để tính cả ký tự kết thúc chuỗi
+    // Quên cái này có thể sẽ gây mất dữ liệu nếu receiver set ký tự có nghĩa ở cuối thành \0
+    int udp_len = sizeof(struct udp_header) + data_len +1  ; 
 
-    // Tổng kích thước UDP packet
-    int udp_len = sizeof(struct udp_header) + data_len;
-
-    // Cấp phát vùng nhớ UDP header + payload
+    // Cấp phát vùng nhớ UDP packet , clear vùng nhớ 
     char packet[udp_len];
     memset(packet, 0, udp_len);
 
     // Gán UDP header, map 8 byte của struct udp_header vào vùng nhớ packet, để truy cập các trường của UDP header bằng tên trường thay vì dùng offset
     struct udp_header *udp = (struct udp_header *) packet;
-    // host to network short (htons) chuyển đổi từ định dạng máy chủ sang định dạng mạng
-    // host : một số máy lưu small/big-endian, to network : chuyển về big-endian
-    // short : 16 bit vì trường port chỉ có 16 bit nên cần ép kiểu về short
+  
     udp->source = SRC_PORT;
     udp->dest = DST_PORT;
     udp->len = htons(udp_len);
-    udp->check = 0; // sẽ gán sau
+    udp->check = 0; // Chưa tính checksum, sẽ tính sau
 
-    // Copy payload
+    // Copy payload(data)
     memcpy(packet + sizeof(struct udp_header), data, data_len);
 
-    // Tạo pseudo header
+    // Tạo pseudo header để tính checksum
     struct pseudo_header psh;
-    psh.src_address = SRC_IP; // chuyển string thành hexa IP
+    psh.src_address = SRC_IP; 
     psh.dst_address = DST_IP;
     psh.placeholder = 0;
     psh.protocol = IPPROTO_UDP;
     psh.udp_len = htons(udp_len);
-
+    // printf("data : %s\n", data);
+    // printf("payload length: %d\n", data_len);
+    // printf("udp length: %d\n", udp_len);
+    
     // Gộp pseudo header + UDP để tính checksum
     int psize = sizeof(struct pseudo_header) + udp_len;
     char *pseudogram = malloc(psize);
@@ -109,7 +90,17 @@ int send_udp_packet(int src_port, int dst_port, const char *data,
     free(pseudogram);
 
     // Gửi packet cho network ( vì chúng ta chỉ dừng ở transport )
-    send_to_net(sock, packet, udp_len, psh.src_address, psh.dst_address); //Chỉ cần send k cần hand shake 
+    printf("size of packet: %ld\n", sizeof(packet));
+    int result = send_to_net(sock, packet, udp_len, psh.src_address, psh.dst_address); //Chỉ cần send k cần hand shake
+    if (result < 0) {
+        perror("Error sending packet to network layer");
+        close(sock);
+        return -1;
+    }
     close(sock); // Đóng socket sau khi gửi xong
+
+    if (on_send) {
+        on_send(data, data_len);
+    } 
     return 0;
 }
